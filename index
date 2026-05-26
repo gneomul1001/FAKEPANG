@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAKEPANG - 가짜 쿠팡 쇼핑몰</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0074e9;
+            --bg-color: #f0f1f4;
+            --text-color: #111;
+            --border-color: #ddd;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans KR', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding-top: 60px;
+            padding-bottom: 70px;
+            max-width: 500px; /* 모바일 친화적인 레이아웃 고정 */
+            margin: 0 auto;
+            background-color: #fff;
+            min-height: 100vh;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        /* 공통 숨김 처리 */
+        .page { display: none; padding: 15px; }
+        .page.active { display: block; }
+
+        /* 1. 상단 배너 & 검색창 */
+        header {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 500px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            z-index: 1000;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 900;
+            color: var(--primary-color);
+            text-decoration: none;
+            letter-spacing: -1px;
+        }
+
+        .search-container {
+            flex: 1;
+            position: relative;
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 8px 35px 8px 12px;
+            border: 2px solid var(--primary-color);
+            border-radius: 4px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .search-container .search-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary-color);
+            cursor: pointer;
+        }
+
+        /* 2. 하단 네비게이션 바 */
+        nav.bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 500px;
+            background-color: #ffffff;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 1000;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 11px;
+            color: #555;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .nav-item.active {
+            color: var(--primary-color);
+        }
+
+        .nav-item .material-icons-outlin { font-size: 24px; margin-bottom: 2px; }
+
+        /* 3. 홈 페이지 (추천/관심 상품) */
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 20px 0 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .product-card {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fff;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            background-color: #f7f7f7;
+        }
+
+        .product-info {
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .product-name {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 5px;
+            line-height: 1.3;
+            height: 36px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .product-price {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ae0000;
+        }
+
+        .badge-rocket {
+            color: #00891a;
+            font-size: 11px;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+
+        .btn-wish {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.8);
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ccc;
+        }
+        .btn-wish.active { color: #ff3b30; }
+
+        /* 4. 카테고리 페이지 (분리형 듀얼 스크롤) */
+        .category-container {
+            display: flex;
+            height: calc(100vh - 130px);
+            margin: -15px;
+        }
+
+        .main-category {
+            width: 35%;
+            background-color: #f5f5f5;
+            overflow-y: auto;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .sub-category {
+            width: 65%;
+            background-color: #ffffff;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .main-cat-item {
+            padding: 15px 10px;
+            font-size: 14px;
+            color: #555;
+            cursor: pointer;
+            border-left: 4px solid transparent;
+        }
+
+        .main-cat-item.active {
+            background-color: #fff;
+            color: var(--primary-color);
+            font-weight: bold;
+            border-left-color: var(--primary-color);
+        }
+
+        .sub-cat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .sub-cat-item {
+            padding: 15px 10px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 13px;
+            cursor: pointer;
+            border: 1px solid #eee;
+        }
+
+        /* 5. 상품 관리 / 추가 폼 */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        /* 6. 배송 진행상황 창 */
+        .delivery-card {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .delivery-status-flow {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin: 25px 0 15px 0;
+        }
+
+        .delivery-status-flow::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 10%;
+            width: 80%;
+            height: 2px;
+            background-color: #ddd;
+            z-index: 1;
+        }
+
+        .status-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+            width: 25%;
+        }
+
+        .step-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #ddd;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .status-step.active .step-icon {
+            background-color: var(--primary-color);
+        }
+        .status-step.active .step-text {
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .step-text {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .notice-banner {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-top: 10px;
+            text-align: center;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="#" class="logo" onclick="switchPage('home')">FAKEPANG</a>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="쿠팡에서 검색하세요! (가짜)">
+            <span class="material-icons-outlin search-icon" onclick="alert('가짜 검색 기능입니다.')">search</span>
+        </div>
+    </header>
+
+    <div id="home-page" class="page active">
+        <div class="section-title">🔥 오늘의 추천 상품</div>
+        <div class="product-grid" id="recommend-grid"></div>
+
+        <div class="section-title">⭐ 내가 찜한 관심 상품</div>
+        <div class="product-grid" id="wishlist-grid"></div>
+    </div>
+
+    <div id="category-page" class="page">
+        <div class="category-container">
+            <div class="main-category" id="main-category-box">
+                <div class="main-cat-item active" onclick="selectMainCat('fashion', this)">패션의류/잡화</div>
+                <div class="main-cat-item" onclick="selectMainCat('electronics', this)">가전디지털</div>
+                <div class="main-cat-item" onclick="selectMainCat('food', this)">식품/신선식품</div>
+                <div class="main-cat-item" onclick="selectMainCat('beauty', this)">뷰티/화장품</div>
+            </div>
+            <div class="sub-category">
+                <div class="sub-cat-grid" id="sub-category-box">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="upload-page" class="page">
+        <div class="section-title">📦 가짜 상품 등록하기</div>
+        <div class="form-group">
+            <label>상품명</label>
+            <input type="text" id="prodName" placeholder="예: 맛있는 로켓 사과 세트">
+        </div>
+        <div class="form-group">
+            <label>가격 (원)</label>
+            <input type="number" id="prodPrice" placeholder="예: 15900">
+        </div>
+        <div class="form-group">
+            <label>카테고리 설정</label>
+            <select id="prodCat">
+                <option value="fashion">패션의류/잡화</option>
+                <option value="electronics">가전디지털</option>
+                <option value="food">식품/신선식품</option>
+                <option value="beauty">뷰티/화장품</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>상품 사진 (이미지 URL 또는 파일 업로드)</label>
+            <input type="file" id="prodFile" accept="image/*" onchange="handleFileSelect(event)" style="margin-bottom: 8px;">
+            <input type="text" id="prodImgUrl" placeholder="또는 이미지 웹 주소(URL) 입력">
+        </div>
+        <button class="btn-submit" onclick="addNewProduct()">FAKEPANG 상품 추가하기</button>
+    </div>
+
+    <div id="delivery-page" class="page">
+        <div class="section-title">🚚 실시간 배송 진행 상황</div>
+        
+        <div id="delivery-list">
+            </div>
+
+        <div class="notice-banner">
+            ⚠️ 안내: 본 사이트는 FAKE 쇼핑몰로, 어떠한 결제나 실제 배송도 발생하지 않는 시뮬레이션 상태입니다.
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <div class="nav-item active" id="nav-home" onclick="switchPage('home')">
+            <span class="material-icons-outlin">home</span><span>홈</span>
+        </div>
+        <div class="nav-item" id="nav-category" onclick="switchPage('category')">
+            <span class="material-icons-outlin">menu</span><span>카테고리</span>
+        </div>
+        <div class="nav-item" id="nav-upload" onclick="switchPage('upload')">
+            <span class="material-icons-outlin">add_box</span><span>상품추가</span>
+        </div>
+        <div class="nav-item" id="nav-delivery" onclick="switchPage('delivery')">
+            <span class="material-icons-outlin">local_shipping</span><span>배송조회</span>
+        </div>
+    </nav>
+
+    <script>
+        // 초기 데이터 세팅 (로컬 스토리지 비어있을 때 사용)
+        const defaultProducts = [
+            { id: 1, name: "페이크팡 에센셜 남성 반팔티 3팩", price: 19800, cat: "fashion", img: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=400", wish: false },
+            { id: 2, name: "초고속 무선 게이밍 마우스 (가짜)", price: 45000, cat: "electronics", img: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=400", wish: true },
+            { id: 3, name: "[로켓] 당도선별 세척사과 1.5kg", price: 12900, cat: "food", img: "https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?w=400", wish: false }
+        ];
+
+        const subCategories = {
+            fashion: ["남성의류", "여성의류", "신발", "가방/잡화"],
+            electronics: ["스마트폰", "노트북", "주변기기", "생활가전"],
+            food: ["신선과일", "정육/계란", "간편조리", "생수/음료"],
+            beauty: ["스킨케어", "메이크업", "클렌징", "헤어/바디"]
+        };
+
+        // 가짜 주문 상태용 디폴트 데이터
+        const defaultOrders = [
+            { id: 101, name: "초고속 무선 게이밍 마우스", price: 45000, status: 2, date: "2026-05-26" }
+        ];
+
+        let products = JSON.parse(localStorage.getItem('products')) || defaultProducts;
+        let orders = JSON.parse(localStorage.getItem('orders')) || defaultOrders;
+        let uploadedImgBase64 = "";
+
+        // 페이지 전환 함수
+        function switchPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            document.getElementById(`${pageId}-page`).classList.add('active');
+            document.getElementById(`nav-${pageId}`).classList.add('active');
+
+            if(pageId === 'home') renderHome();
+            if(pageId === 'category') selectMainCat('fashion', document.querySelector('.main-cat-item'));
+            if(pageId === 'delivery') renderDelivery();
+        }
+
+        // 이미지 파일 업로드 시 Base64 변환 처리
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedImgBase64 = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // 새 상품 추가 시스템
+        function addNewProduct() {
+            const name = document.getElementById('prodName').value;
+            const price = document.getElementById('prodPrice').value;
+            const cat = document.getElementById('prodCat').value;
+            let img = document.getElementById('prodImgUrl').value;
+
+            if(uploadedImgBase64) {
+                img = uploadedImgBase64;
+            } else if(!img) {
+                img = "https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=400"; // 기본 대체 이미지
+            }
+
+            if(!name || !price) {
+                alert("상품명과 가격을 입력해주세요!");
+                return;
+            }
+
+            const newProd = {
+                id: Date.now(),
+                name: name,
+                price: parseInt(price),
+                cat: cat,
+                img: img,
+                wish: false
+            };
+
+            products.push(newProd);
+            localStorage.setItem('products', JSON.stringify(products));
+
+            // 가짜 주문 자동 생성 시뮬레이션 (배송창 연동용)
+            orders.push({
+                id: Date.now() + 1,
+                name: name,
+                price: parseInt(price),
+                status: 1, // 상품준비중 단계 시작
+                date: new Date().toISOString().split('T')[0]
+            });
+            localStorage.setItem('orders', JSON.stringify(orders));
+
+            alert("상품이 성공적으로 등록되었으며 가짜 주문/배송 리스트에 추가되었습니다!");
+            
+            // 입력 폼 초기화
+            document.getElementById('prodName').value = "";
+            document.getElementById('prodPrice').value = "";
+            document.getElementById('prodImgUrl').value = "";
+            document.getElementById('prodFile').value = "";
+            uploadedImgBase64 = "";
+
+            switchPage('home');
+        }
+
+        // 관심상품(찜) 토글 기능
+        function toggleWish(id, event) {
+            event.stopPropagation();
+            products = products.map(p => p.id === id ? {...p, wish: !p.wish} : p);
+            localStorage.setItem('products', JSON.stringify(products));
+            renderHome();
+        }
+
+        // 홈 화면 렌더링 (추천상품 & 관심상품 분리)
+        function renderHome() {
+            const recommendGrid = document.getElementById('recommend-grid');
+            const wishlistGrid = document.getElementById('wishlist-grid');
+
+            recommendGrid.innerHTML = "";
+            wishlistGrid.innerHTML = "";
+
+            products.forEach(p => {
+                const cardHtml = `
+                    <div class="product-card">
+                        <button class="btn-wish ${p.wish ? 'active' : ''}" onclick="toggleWish(${p.id}, event)">
+                            <span class="material-icons-outlin" style="font-size:20px;">favorite</span>
+                        </button>
+                        <img src="${p.img}" class="product-img" alt="${p.name}">
+                        <div class="product-info">
+                            <div class="product-name">${p.name}</div>
+                            <div class="product-price">${p.price.toLocaleString()}원</div>
+                            <div class="badge-rocket">🚀 로켓배송 바로내일 도착</div>
+                        </div>
+                    </div>
+                `;
+                
+                // 기본 추천 리스트 업로드
+                recommendGrid.insertAdjacentHTML('beforeend', cardHtml);
+                
+                // 찜 리스트 업로드
+                if(p.wish) {
+                    wishlistGrid.insertAdjacentHTML('beforeend', cardHtml);
+                }
+            });
+
+            if(wishlistGrid.innerHTML === "") {
+                wishlistGrid.innerHTML = "<p style='grid-column: span 2; color:#999; text-align:center; padding:20px; font-size:13px;'>하트 버튼을 눌러 관심 상품을 채워보세요!</p>";
+            }
+        }
+
+        // 카테고리 선택 제어 (상위 카테고리 클릭 시 하위 갱신)
+        function selectMainCat(catKey, element) {
+            document.querySelectorAll('.main-cat-item').forEach(item => item.classList.remove('active'));
+            element.classList.add('active');
+
+            const subBox = document.getElementById('sub-category-box');
+            subBox.innerHTML = "";
+
+            subCategories[catKey].forEach(subName => {
+                subBox.innerHTML += `
+                    <div class="sub-cat-item" onclick="alert('${subName} 카테고리는 테스트용 공간입니다.')">
+                        ${subName}
+                    </div>
+                `;
+            });
+        }
+
+        // 배송 상태 시뮬레이션 조회창 렌더링
+        function renderDelivery() {
+            const container = document.getElementById('delivery-list');
+            container.innerHTML = "";
+
+            if(orders.length === 0) {
+                container.innerHTML = "<p style='color:#999; text-align:center; padding:40px;'>주문 내역이 존재하지 않습니다.</p>";
+                return;
+            }
+
+            orders.forEach(order => {
+                container.innerHTML += `
+                    <div class="delivery-card">
+                        <div style="display:flex; justify-content:space-between; font-size:13px; color:#666; margin-bottom:10px;">
+                            <span>주문일자: ${order.date}</span>
+                            <span style="font-weight:bold; color:#111;">주문번호: ${order.id}</span>
+                        </div>
+                        <h4 style="font-size:15px; margin-bottom:5px;">${order.name}</h4>
+                        <p style="font-size:14px; color:#ae0000; font-weight:bold;">${order.price.toLocaleString()} 원</p>
+                        
+                        <div class="delivery-status-flow">
+                            <div class="status-step ${order.status >= 1 ? 'active' : ''}">
+                                <div class="step-icon"><span class="material-icons-outlin" style="font-size:16px;">receipt</span></div>
+                                <div class="step-text">결제완료</div>
+                            </div>
+                            <div class="status-step ${order.status >= 2 ? 'active' : ''}">
+                                <div class="step-icon"><span class="material-icons-outlin" style="font-size:16px;">inventory_2</span></div>
+                                <div class="step-text">상품준비</div>
+                            </div>
+                            <div class="status-step ${order.status >= 3 ? 'active' : ''}">
+                                <div class="step-icon"><span class="material-icons-outlin" style="font-size:16px;">local_shipping</span></div>
+                                <div class="step-text">배송중</div>
+                            </div>
+                            <div class="status-step ${order.status >= 4 ? 'active' : ''}">
+                                <div class="step-icon"><span class="material-icons-outlin" style="font-size:16px;">home_max</span></div>
+                                <div class="step-text">배송완료</div>
+                            </div>
+                        </div>
+                        <button style="width:100%; padding:6px; background:#f5f5f5; border:1px solid #ccc; font-size:12px; cursor:pointer; border-radius:4px;" 
+                                onclick="stepForward(${order.id})">
+                            [테스트 빌드] 배송 상태 한 단계 진전시키기
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        // 가짜 배송 상태 한단계 올리는 이벤트 테스트 함수
+        function stepForward(orderId) {
+            orders = orders.map(o => {
+                if(o.id === orderId) {
+                    let nextStatus = o.status + 1;
+                    if(nextStatus > 4) nextStatus = 1; // 완료상태 초과 시 초기화 루프
+                    return { ...o, status: nextStatus };
+                }
+                return o;
+            });
+            localStorage.setItem('orders', JSON.stringify(orders));
+            renderDelivery();
+        }
+
+        // 초기 구동
+        window.onload = function() {
+            renderHome();
+        };
+    </script>
+</body>
+</html>

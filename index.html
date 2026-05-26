@@ -70,11 +70,11 @@
         </div>
     </section>
 
-    <!-- 2. 카테고리 섹션 (상위/하위 독립 스크롤 분리 방식) -->
+    <!-- 2. 카테고리 섹션 -->
     <section id="category-section" class="hidden">
         <div class="flex justify-between items-center mb-4 border-b pb-2">
             <h2 class="text-xl font-black text-gray-900">카테고리 탐색</h2>
-            <button onclick="showCategoryManageModal()" class="bg-gray-800 text-white text-xs font-bold px-2.5 py-1.5 rounded hover:bg-gray-700 transition-colors">🛠️ 구조 관리</button>
+            <button onclick="showCategoryManageModal()" class="bg-gray-800 text-white text-xs font-bold px-2.5 py-1.5 rounded hover:bg-gray-700 transition-colors">🛠️ 구조 관리 (추가/수정)</button>
         </div>
 
         <!-- 분리된 스크롤 방식 카테고리 컨테이너 -->
@@ -229,7 +229,7 @@
 <!-- 비즈니스 로직 스크립트 -->
 <script>
     // 로컬 스토리지 데이터 초기화
-    let db = JSON.parse(localStorage.getItem('fakepangDB_v2')) || {
+    let db = JSON.parse(localStorage.getItem('fakepangDB_v3')) || {
         categories: [
             { id: "cat_1", main: "가전디지털", subs: ["스마트폰", "노트북", "이어폰/헤드폰"] },
             { id: "cat_2", main: "식품/푸드", subs: ["신선과일", "가공식품", "생수/음료"] },
@@ -254,7 +254,6 @@
         updateCartCount();
     }
 
-    // 홈 화면 목록 렌더링
     function renderHomeProducts() {
         const recommendContainer = document.getElementById('recommend-products');
         const wishContainer = document.getElementById('wishlist-products');
@@ -277,7 +276,6 @@
         }
     }
 
-    // 카드 디자인 내부에 수정/삭제를 위한 간이 기어 배치
     function createProductCard(p) {
         const card = document.createElement('div');
         card.className = "bg-white border border-gray-100 rounded-lg p-3 flex flex-col justify-between cursor-pointer shadow-xs hover:shadow-md transition-shadow relative group";
@@ -314,7 +312,6 @@
         renderCategoryScrolls();
     }
 
-    // 상위-하위 스크롤 렌더링
     function renderCategoryScrolls() {
         const mainContainer = document.getElementById('main-category-scroll');
         const subContainer = document.getElementById('sub-category-scroll');
@@ -383,7 +380,6 @@
         filtered.forEach(p => grid.appendChild(createProductCard(p)));
     }
 
-    // 파일 드롭 다운 인코더
     function handleImageDrop(e, inputId) {
         e.preventDefault();
         e.currentTarget.classList.remove('drag-over');
@@ -399,7 +395,6 @@
     function onDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
     function onDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
 
-    // 검색 제어
     function executeSearch() {
         const query = document.getElementById('search-input').value.trim();
         if(!query) return;
@@ -431,7 +426,6 @@
         }
     }
 
-    // 상품 단일 상세화면 출력 및 관리 단추 연결 
     function showProductDetail(id) {
         currentDetailProductId = id;
         const p = db.products.find(item => item.id === id);
@@ -452,7 +446,6 @@
         document.getElementById('detail-wish-btn').innerText = p.wish ? '❤️' : '🤍';
         document.getElementById('detail-wish-btn').onclick = () => toggleWish(p.id);
 
-        // 수정 및 삭제 버튼 인라인 액션 매핑
         document.getElementById('detail-edit-btn').onclick = () => showEditProductModal(p.id);
         document.getElementById('detail-delete-btn').onclick = () => {
             if(deleteProductDirect(p.id)) showSection('home-section');
@@ -481,7 +474,6 @@
         alert(`🛒 장바구니에 [${p.name}] ${qty}개가 담겼습니다.`);
     }
 
-    // 장바구니 렌더러
     function renderCart() {
         const container = document.getElementById('cart-items');
         container.innerHTML = "";
@@ -524,7 +516,6 @@
         document.getElementById('cart-count').innerText = db.cart.length;
     }
 
-    // 주문 및 익선동 가상 타임라인 배송 시뮬레이션
     function startOrderProcess() {
         if(db.cart.length === 0) return alert("장바구니에 상품이 없습니다.");
         
@@ -569,7 +560,6 @@
         }, 1500);
     }
 
-    // [추가 기능] 기존 등록 상품 정보 변경 (수정) 모달 구현
     function showEditProductModal(id, event) {
         if(event) event.stopPropagation();
         const p = db.products.find(item => item.id === id);
@@ -597,7 +587,7 @@
                 <input id="edit-p-price" type="number" value="${p.price}" class="w-full border p-2 rounded text-xs">
             </div>
             <div>
-                <label class="text-xs font-bold block mb-1">이미지 리소스 (드래그 가능)</label>
+                <label class="text-xs font-bold block mb-1">이미지 리소스</label>
                 <input id="edit-p-img" type="text" value="${p.img}" class="w-full border p-2 rounded text-xs bg-gray-50"
                     ondrop="handleImageDrop(event, 'edit-p-img')" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)">
             </div>
@@ -608,7 +598,7 @@
             const editPrice = parseInt(document.getElementById('edit-p-price').value) || 0;
             const editImg = document.getElementById('edit-p-img').value;
 
-            if(!editName || !editSub) return alert("공백 란이 존재할 수 없습니다.");
+            if(!editName || !editSub) return alert("공백란을 채워주세요.");
 
             p.mainCat = editMain;
             p.subCat = editSub;
@@ -621,16 +611,13 @@
             if(!document.getElementById('category-section').classList.contains('hidden')) renderCategoryScrolls();
             if(!document.getElementById('product-detail-section').classList.contains('hidden') && currentDetailProductId === id) showProductDetail(id);
             closeModal();
-            alert("상품 수정 작업이 완수되었습니다.");
         });
     }
 
-    // [추가 기능] 데이터베이스 내부 상품 영구 삭제 기능
     function deleteProductDirect(id, event) {
         if(event) event.stopPropagation();
-        if(confirm("이 가짜 상품 데이터를 영구 폐기 조치하시겠습니까?")) {
+        if(confirm("이 상품 데이터를 영구 폐기하십니까?")) {
             db.products = db.products.filter(item => item.id !== id);
-            // 장바구니에서도 제거
             db.cart = db.cart.filter(item => item.id !== id);
             saveDB();
             updateCartCount();
@@ -642,14 +629,12 @@
         return false;
     }
 
-    // 신규 상품 등록 모달
     function showAddProductModal() {
         if(db.categories.length === 0) return alert("카테고리를 우선 설정해주십시오.");
 
         let mainOptions = db.categories.map((c, i) => `<option value="${i}">${c.main}</option>`).join('');
 
-        openModal("새로운 가짜 상품 강제 데이터 생성", `
-            <p class="text-[10px] text-blue-500 font-bold mb-2">* 이미지 파일을 아래 주소 칸으로 직접 드래그 드롭 가능</p>
+        openModal("새로운 가짜 상품 생성", `
             <div class="mb-2">
                 <label class="text-xs font-bold block mb-1">상위 대분류 선택</label>
                 <select id="new-p-main" onchange="syncModalSubCategories()" class="w-full border p-2 bg-white rounded text-xs">${mainOptions}</select>
@@ -667,7 +652,7 @@
                 <input id="new-p-price" type="number" placeholder="예: 25000" class="w-full border p-2 rounded text-xs">
             </div>
             <div>
-                <label class="text-xs font-bold block mb-1">이미지 리소스</label>
+                <label class="text-xs font-bold block mb-1">이미지 리소스 (드래그 가능)</label>
                 <input id="new-p-img" type="text" placeholder="파일 직접 드롭 혹은 이미지 주소" 
                     class="w-full border p-2 rounded text-xs bg-gray-50 focus:bg-white transition-all"
                     ondrop="handleImageDrop(event, 'new-p-img')" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)">
@@ -707,50 +692,84 @@
         if(cat) subSelect.innerHTML = cat.subs.map(s => `<option value="${s}">${s}</option>`).join('');
     }
 
-    // 카테고리 뼈대구조 생성 모달
+    // [보완 사항] 카테고리 자체 대분류/소분류 통합 수정 및 관리 기능 모달
     function showCategoryManageModal() {
         let catRows = db.categories.map((c, i) => `
-            <div class="border p-2 rounded bg-gray-50/50 flex flex-col gap-1 text-xs">
-                <div class="flex justify-between items-center font-bold">
-                    <span>📁 대분류: ${c.main}</span>
-                    <button onclick="deleteCategoryStructure(${i})" class="text-red-500 font-bold hover:underline">삭제</button>
+            <div class="border p-3 rounded-lg bg-gray-50/70 flex flex-col gap-2 text-xs">
+                <div class="flex justify-between items-center">
+                    <span class="font-bold text-gray-400">📁 대분류 레이어 [${i+1}]</span>
+                    <button onclick="deleteCategoryStructure(${i})" class="text-red-500 hover:underline">완전삭제</button>
                 </div>
-                <div class="text-[11px] text-gray-400">↳ 소분류: ${c.subs.join(', ') || '없음'}</div>
+                <!-- 대분류 명칭 수정 인풋 -->
+                <div>
+                    <label class="text-[10px] text-gray-400 block mb-0.5">대분류명 수정</label>
+                    <input id="manage-main-${i}" type="text" value="${c.main}" class="w-full border px-2 py-1 rounded bg-white text-xs font-bold">
+                </div>
+                <!-- 소분류 명칭 수정 인풋 -->
+                <div>
+                    <label class="text-[10px] text-gray-400 block mb-0.5">소분류 수정 (콤마구분)</label>
+                    <input id="manage-subs-${i}" type="text" value="${c.subs.join(', ')}" class="w-full border px-2 py-1 rounded bg-white text-xs">
+                </div>
             </div>
         `).join('');
 
-        openModal("카테고리 뼈대 구조 관리", `
-            <div class="flex flex-col gap-2 max-h-40 overflow-y-auto mb-4">${catRows || '<p class="text-center text-gray-400 py-2">구조가 비어있습니다.</p>'}</div>
-            <div class="border-t pt-3">
-                <p class="text-[11px] font-bold text-blue-600 mb-2">✨ 대분류 및 하위 소분류 신설</p>
-                <input id="add-main-name" type="text" placeholder="새 대분류 이름 (예: 리빙/가구)" class="w-full border p-2 text-xs rounded mb-1.5">
-                <input id="add-subs-comma" type="text" placeholder="하위 항목 복수 기입 시 콤마구분 (예: 침대,소파)" class="w-full border p-2 text-xs rounded">
+        openModal("카테고리 대분류/소분류 구조화 관리", `
+            <div class="flex flex-col gap-3 max-h-56 overflow-y-auto mb-4 border-b pb-3">${catRows || '<p class="text-center text-gray-400 py-2">설정된 카테고리가 없습니다.</p>'}</div>
+            
+            <div>
+                <p class="text-[11px] font-bold text-blue-600 mb-1.5">➕ 새로운 독립 카테고리 추가</p>
+                <input id="add-main-name" type="text" placeholder="새 대분류 이름 (예: 스포츠/레저)" class="w-full border p-2 text-xs rounded mb-1">
+                <input id="add-subs-comma" type="text" placeholder="하위 소분류 구성 (예: 등산,캠핑,축구)" class="w-full border p-2 text-xs rounded">
             </div>
         `, () => {
+            // 1. 기존 카테고리 루프를 돌며 수정 내용 업데이트 체크 반영
+            db.categories.forEach((cat, i) => {
+                const inputMain = document.getElementById(`manage-main-${i}`);
+                const inputSubs = document.getElementById(`manage-subs-${i}`);
+                
+                if(inputMain && inputSubs) {
+                    const oldMainName = cat.main;
+                    const newMainName = inputMain.value.trim();
+                    const newSubsArr = inputSubs.value.split(',').map(s => s.trim()).filter(s => s !== "");
+
+                    if(newMainName) {
+                        // 대분류명이 바뀌면 기존 소속 상품들의 메인카테고리 텍스트 명칭도 연동 일괄 수정
+                        if(oldMainName !== newMainName) {
+                            db.products.forEach(p => {
+                                if(p.mainCat === oldMainName) p.mainCat = newMainName;
+                            });
+                        }
+                        cat.main = newMainName;
+                        cat.subs = newSubsArr;
+                    }
+                }
+            });
+
+            // 2. 신규 카테고리 추가 필드 체크
             const newMain = document.getElementById('add-main-name').value.trim();
             const subsText = document.getElementById('add-subs-comma').value.trim();
 
-            if(!newMain) return closeModal();
+            if(newMain) {
+                let subsArr = subsText ? subsText.split(',').map(s => s.trim()).filter(s => s !== "") : [];
+                db.categories.push({ id: "cat_" + Date.now(), main: newMain, subs: subsArr });
+                selectedMainCatIdx = db.categories.length - 1;
+            }
 
-            let subsArr = subsText ? subsText.split(',').map(s => s.trim()).filter(s => s !== "") : [];
-            db.categories.push({ id: "cat_" + Date.now(), main: newMain, subs: subsArr });
-            
-            selectedMainCatIdx = db.categories.length - 1;
-            selectedSubCatName = "all";
             saveDB();
             renderCategoryScrolls();
             closeModal();
+            alert("카테고리 레이아웃 구조 개편이 완료되었습니다.");
         });
     }
 
     function deleteCategoryStructure(index) {
-        if(confirm("해당 카테고리 레이아웃 구조를 파기하시겠습니까?")) {
+        if(confirm("해당 카테고리 축을 삭제하시겠습니까?\n(등록된 상품들의 소속 텍스트 값은 보존됩니다)")) {
             db.categories.splice(index, 1);
             selectedMainCatIdx = 0;
             selectedSubCatName = "all";
             saveDB();
             renderCategoryScrolls();
-            showCategoryManageModal();
+            showCategoryManageModal(); // 변경 모달 상태 갱신 리로드
         }
     }
 
@@ -767,7 +786,7 @@
         document.getElementById('search-input').focus();
     }
     
-    function saveDB() { localStorage.setItem('fakepangDB_v2', JSON.stringify(db)); }
+    function saveDB() { localStorage.setItem('fakepangDB_v3', JSON.stringify(db)); }
     
     function openModal(title, content, onConfirm) {
         document.getElementById('modal-title').innerText = title;
